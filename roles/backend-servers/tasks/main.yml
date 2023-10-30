@@ -1,0 +1,40 @@
+---
+- name: Include nftables service
+  include_tasks: nftables.yml
+
+- name: Include setup pcs service
+  include_tasks: install_pkgs.yml
+
+- name: Include iscsi_initiator Configuring
+  include_tasks: iscsi_initiator.yml
+
+- name: Include setup pcs service
+  include_tasks: multipath.yml
+
+- name: Include setup pcs service
+  include_tasks: pcs_setup.yml
+
+- name: Include configure pcs service
+  include_tasks: pcs_config1.yml
+  when: "ansible_hostname in 'backend-01'"
+
+- name: Include lvm2
+  include_tasks: lvm2.yml
+
+- name: Include gfs2
+  include_tasks: gfs2.yml
+  when: "ansible_hostname in 'backend-01'"
+
+- name: Include configure pcs service
+  include_tasks: pcs_config2.yml
+  when: "ansible_hostname in 'backend-01'"
+
+- name: Include nginx service
+  include_tasks: nginx.yml
+
+- name: Include php-fpm service
+  include_tasks: php-fpm.yml
+
+- name: Include selinux setting
+  include_tasks: selinux.yml
+  when: ansible_os_family == "RedHat"

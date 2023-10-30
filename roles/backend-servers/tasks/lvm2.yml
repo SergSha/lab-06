@@ -1,0 +1,45 @@
+---
+# vgcreate --shared web_cluster_vg /dev/vdb
+- name: Create a volume groups
+  community.general.lvg:
+    #state: present
+    vg: "{{ item.vg }}"
+    pvs: "{{ item.pv }}"
+    #vg_options: "-Ay -cy" # "--autobackup y --clustered y"
+    vg_options: "--shared"
+  with_items: 
+    - { vg: 'web_cluster_vg', pv: '/dev/mapper/webpath' }
+  when: "ansible_hostname in 'backend-01'"
+
+- name: Wait a little
+  pause:
+    seconds: 5
+
+## lvmdevices --adddev /dev/mapper/webpath
+#- name: Add the shared devices to the devices file
+#  ansible.builtin.command: "lvmdevices --adddev {{ item.device }}"
+#  with_items: 
+#    - { device: '/dev/mapper/webpath' }
+#  when: "ansible_hostname not in ['backend-01']"
+
+# vgchange --lockstart web_cluster_vg
+- name: start lock manager for shared
+  ansible.builtin.command: "vgchange --lockstart {{ item.vg }}"
+  with_items: 
+    - { vg: 'web_cluster_vg' }
+  when: "ansible_hostname not in 'backend-01'"
+
+# lvcreate --activate sy -l 100%FREE -n web_cluster_lv web_cluster_vg
+- name: Create a logical volumes
+  community.general.lvol:
+    vg: "{{ item.vg }}"
+    lv: "{{ item.lv }}"
+    size: "{{ item.size }}"
+    opts: --activate sy
+  with_items: 
+    - { vg: 'web_cluster_vg', lv: 'web_cluster_lv', size: '100%FREE' }
+  when: "ansible_hostname in 'backend-01'"
+
+- name: Wait a little
+  pause:
+    seconds: 5

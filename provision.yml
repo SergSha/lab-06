@@ -1,0 +1,15 @@
+---
+- hosts: all
+  #remote_user: cloud-user
+  become: true
+  serial: 5
+
+  roles:
+    - chrony
+    #- { role: haproxy-servers, when: "'haproxy_servers' in group_names" }
+    - { role: jump-servers, when: "'jump_servers' in group_names" }
+    - { role: nginx-servers, when: "'nginx_servers' in group_names" }
+    - { role: iscsi-servers, when: "'iscsi_servers' in group_names" }
+    - { role: backend-servers, when: "'backend_servers' in group_names" }
+    - { role: db-servers, when: "'db_servers' in group_names" }
+    - { role: proxysql-servers, when: "'proxysql_servers' in group_names" }

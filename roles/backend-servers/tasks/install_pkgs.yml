@@ -1,0 +1,84 @@
+---
+- name: Debian OS
+  block:
+
+  - name: Install all packages Debian
+    ansible.builtin.apt:
+      name:
+        - open-iscsi
+        - device-mapper-multipath
+      state: present
+
+  when: ansible_os_family == "Debian"
+
+- name: Redhat OS
+  block:
+
+  # dnf install epel-release -y
+  - name: Install epel-release
+    ansible.builtin.dnf:
+      name:
+        - epel-release
+      state: present
+
+  # dnf install iscsi-initiator-utils gfs2-utils lvm2-cluster
+  - name: Install all packages RedHat
+    ansible.builtin.dnf:
+      name:
+        - iscsi-initiator-utils
+        - device-mapper-multipath
+        - python3-cryptography
+        - setools-console
+        - libsemanage-python3
+        - policycoreutils-python3
+        - pcs
+        - pacemaker
+        - fence-agents-all
+        - corosync
+        - dlm
+        - lvm2
+        - lvm2-lockd
+        - gfs2-utils
+      state: present
+      #enablerepo: highavailability # for almalinux 9
+      enablerepo: ha,appstream,resilientstorage # ha for almalinux 8, resilientstorage for dlm
+
+  when: ansible_os_family == "RedHat"
+
+# echo 'system_id_source = "uname"' >> /etc/lvm/lvm.conf
+- name: Add 'use_lvmlockd = 1' to LVM Confifuration File
+  ansible.builtin.lineinfile:
+    path: /etc/lvm/lvm.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items: 
+    - { regexp: "system_id_source =", line: "system_id_source = 'uname'" }
+    - { regexp: "use_lvmlockd =", line: "use_lvmlockd = 1" }
+    - { regexp: "use_devicesfile =", line: "use_devicesfile = 1" }
+
+#- name: Add to LVM Confifuration File (Filter)
+#  ansible.builtin.lineinfile:
+#    path: "/etc/lvm/lvm.conf"
+#    insertafter: 'devices {'
+#    line: '{{ item }}'
+#  with_items:
+#    - 'global_filter=["a|/dev/mapper/otus.*|","a|/dev/mapper/mpath.*|","a|/dev/sd.*|","r|.*|"]'
+#    - 'filter=["a|/dev/mapper/otus.*|","a|/dev/mapper/mpath.*|","a|/dev/sd.*|","r|.*|"]'
+
+# echo 'locking_type = 1' >> /etc/lvm/lvm.conf
+- name: Add2 'locking_type = 1' to LVM Confifuration File
+  ansible.builtin.lineinfile:
+    path: /etc/lvm/lvm.conf
+    insertafter: '^global {'
+    line: "{{ item.line }}"
+  with_items:
+    - { line: "locking_type = 1" }
+
+# mkdir /var/www
+- name: Create directories for cluster mount
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  with_items: 
+    - /var/www

@@ -1,0 +1,21 @@
+---
+# copy keepalived/keepalived.conf.j2 /etc/keepalived/keepalived.conf
+- name: Backup default keepalived config file
+  ansible.builtin.copy:
+    src: /etc/keepalived/keepalived.conf
+    dest: /etc/keepalived/keepalived.conf.backup
+    remote_src: true
+
+# copy keepalived/keepalived.conf.j2 /etc/keepalived/keepalived.conf
+- name: Template custom keepalived config file
+  ansible.builtin.template:
+    src: keepalived/keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+
+# systemctl enable keepalived --now
+- name: "Start and enable keepalived service"
+  ansible.builtin.service:
+    name: keepalived
+    state: restarted
+    enabled: true
+  

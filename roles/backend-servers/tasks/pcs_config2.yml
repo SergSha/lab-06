@@ -1,0 +1,36 @@
+---
+# pcs resource create web_cluster_vg ocf:heartbeat:LVM-activate lvname=web_cluster_lv vgname=web_cluster_vg activation_mode=shared vg_access_mode=lvmlockd op monitor interval=30s on-fail=ignore clone interleave=true ordered=true
+- name: create LVM-activate resource
+  ansible.builtin.command: "pcs resource create {{ item.name }} ocf:heartbeat:LVM-activate lvname={{ item.lv }} vgname={{ item.vg }} activation_mode=shared vg_access_mode=lvmlockd op monitor interval=30s on-fail=ignore clone interleave=true ordered=true"
+  with_items: 
+    - { name: 'web_cluster_vg', lv: 'web_cluster_lv', vg: 'web_cluster_vg' }
+
+# pcs constraint order start lvmlockd-clone then web_cluster_vg-clone
+- name: set start order as [locking] → [shared_vg]
+  ansible.builtin.command: "pcs constraint order start lvmlockd-clone then {{ item.name }}-clone"
+  with_items: 
+    - { name: 'web_cluster_vg' }
+
+# pcs constraint colocation add web_cluster_vg-clone with lvmlockd-clone
+- name: set that [shared_vg] and [locking] start on a same node
+  ansible.builtin.command: "pcs constraint colocation add {{ item.name }}-clone with lvmlockd-clone"
+  with_items: 
+    - { name: 'web_cluster_vg' }
+
+# pcs resource create web_cluster_fs ocf:heartbeat:Filesystem device='/dev/web_cluster_vg/web_cluster_lv' directory='/var/www' fstype=gfs2 options=noatime op monitor interval=20s on-fail=ignore clone interleave=true
+- name: create Filesystem resource
+  ansible.builtin.command: "pcs resource create {{ item.name }} ocf:heartbeat:Filesystem device={{ item.device }} directory={{ item.mnt }} fstype=gfs2 options=noatime op monitor interval=20s on-fail=ignore clone interleave=true"
+  with_items: 
+    - { name: 'web_cluster_fs', device: '/dev/web_cluster_vg/web_cluster_lv', mnt: '/var/www' }
+
+# pcs constraint order start web_cluster_vg-clone then web_cluster_fs-clone
+- name: set start order as [shared_vg] → [shared_fs]
+  ansible.builtin.command: "pcs constraint order start {{ item.vg }}-clone then {{ item.fs }}-clone"
+  with_items:
+    - { vg: 'web_cluster_vg', fs: 'web_cluster_fs' }
+
+# pcs constraint colocation add web_cluster_fs-clone with web_cluster_vg-clone
+- name: set that [shared_fs] and [shared_vg] start on a same node
+  ansible.builtin.command: "pcs constraint colocation add {{ item.fs }}-clone with {{ item.vg }}-clone"
+  with_items:
+    - { vg: 'web_cluster_vg', fs: 'web_cluster_fs' }

@@ -1,0 +1,28 @@
+---
+- name: Debian OS
+  block:
+
+  # apt install keepalived haproxy -y
+  - name: Install packages Debian
+    ansible.builtin.apt:
+      name:
+        - keepalived
+        - haproxy
+      state: latest
+      update_cache: true
+  
+  when: ansible_os_family == "Debian"
+
+- name: Redhat OS
+  block:
+
+  # dnf install keepalived haproxy -y
+  - name: Install packages RedHat
+    ansible.builtin.dnf:
+      name:
+        - keepalived
+        - haproxy
+      state: latest
+      update_cache: true
+  
+  when: ansible_os_family == "RedHat"

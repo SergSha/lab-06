@@ -1,0 +1,18 @@
+[mysqld]
+wsrep_provider_options="socket.ssl_key=server-key.pem;socket.ssl_cert=server-cert.pem;socket.ssl_ca=ca.pem"
+ssl-ca=/var/lib/mysql/ca.pem
+ssl-key=/var/lib/mysql/server-key.pem
+ssl-cert=/var/lib/mysql/server-cert.pem
+bind-address = *
+require_secure_transport = ON
+
+[sst]
+encrypt=4
+ssl-ca=/var/lib/mysql/ca.pem
+ssl-key=/var/lib/mysql/server-key.pem
+ssl-cert=/var/lib/mysql/server-cert.pem
+
+[client]
+ssl-ca=/var/lib/mysql/ca.pem
+ssl-key=/var/lib/mysql/client-key.pem
+ssl-cert=/var/lib/mysql/client-cert.pem

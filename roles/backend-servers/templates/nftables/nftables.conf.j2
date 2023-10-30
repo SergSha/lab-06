@@ -1,0 +1,57 @@
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+table ip filter {
+        chain PCSD_INP {
+                ip saddr {{ subnet_cidrs }} tcp dport 2224 ct state new counter accept
+        }
+        chain PACEMAKER_REMOTED_INP {
+                ip saddr {{ subnet_cidrs }} tcp dport 3121 ct state new counter accept
+        }
+        chain COROSYNC_QNETD_INP {
+                ip saddr {{ subnet_cidrs }} tcp dport 5403 ct state new counter accept
+        }
+        chain COROSYNC_INP {
+                ip saddr {{ subnet_cidrs }} udp dport { 5404-5412 } ct state new counter accept
+        }
+        chain DLM_INP {
+                ip saddr {{ subnet_cidrs }} tcp dport 21064 ct state new counter accept
+        }
+        chain MULTI_SITE_CLUSTER_INP {
+                ip saddr {{ subnet_cidrs }} tcp dport 9929 ct state new counter accept
+                ip saddr {{ subnet_cidrs }} udp dport 9929 ct state new counter accept
+        }
+        chain NGINX_INP {
+                ip saddr {{ subnet_cidrs }} tcp dport 8080 ct state new counter accept
+        }
+        chain PHP_FPM_INP {
+                ip saddr {{ subnet_cidrs }} tcp dport 9000 ct state new counter accept
+        }
+        chain INPUT {
+                type filter hook input priority filter; policy drop;
+                ct state invalid counter drop
+                iifname "lo" counter accept
+                tcp dport 22 ct state new counter accept
+                udp dport 323 counter accept
+                ip saddr {{ subnet_cidrs }} icmp type echo-request counter accept
+                ct state established,related counter accept
+                counter jump PCSD_INP
+                counter jump PACEMAKER_REMOTED_INP
+                counter jump COROSYNC_QNETD_INP
+                counter jump COROSYNC_INP
+                counter jump DLM_INP
+                counter jump MULTI_SITE_CLUSTER_INP
+                counter jump NGINX_INP
+                #counter jump PHP_FPM_INP
+        }
+
+        chain FORWARD {
+                type filter hook forward priority filter; policy drop;
+        }
+
+        chain OUTPUT {
+                type filter hook output priority filter; policy drop;
+                ct state established,related,new counter accept
+        }
+}

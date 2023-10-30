@@ -1,0 +1,37 @@
+---
+# mpathconf --enable --with_multipathd y
+- name: Setup multipath in PCS Servers
+  ansible.builtin.command: mpathconf --enable --with_multipathd y
+
+# /usr/lib/udev/scsi_id --whitelisted --replace-whitespace --device=/dev/vdb
+- name: Get ID device /dev/sda
+  ansible.builtin.command: /usr/lib/udev/scsi_id --whitelisted --replace-whitespace --device=/dev/sda
+  register: scsi_id_sda
+
+#- name: Info scsi_id all iscsi devices
+#  ansible.builtin.debug:
+#    msg:
+#      - "{{ scsi_id_sda.stdout }}"
+
+# cp /src/multipath.conf.j2 /etc/multipath.conf
+- name: Copy multipath config file
+  ansible.builtin.template:
+    src: multipath/multipath.conf.j2
+    dest: /etc/multipath.conf
+
+# multipath -a /dev/sda
+- name: Add devices to multipath
+  ansible.builtin.command: "multipath -a {{ item }}"
+  with_items:
+    - /dev/sda
+
+# multipath -r
+- name: Reload multipath
+  ansible.builtin.command: multipath -r
+
+# systemctl restart multipathd
+- name: "Enable and Start Multipathd Service"
+  ansible.builtin.systemd:
+    name: multipathd
+    state: restarted
+    enabled: true

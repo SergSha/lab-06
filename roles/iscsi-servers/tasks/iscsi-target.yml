@@ -1,0 +1,91 @@
+---
+#- name: Debian OS
+#  block:
+  
+#  when: ansible_os_family == "Debian"
+
+- name: Redhat OS
+  block:
+
+  # dnf install targetcli -y
+  - name: Install targetcli RedHat
+    ansible.builtin.dnf:
+      name:
+        - targetcli
+      state: latest
+  
+  when: ansible_os_family == "RedHat"
+
+# systemctl enable target --now
+- name: "Start and enable the target service"
+  service:
+    name: target
+    enabled: true
+    state: started
+
+- name: Check for replay (/opt/iscsi_target_config_done exists)
+  ansible.builtin.stat:
+    path: /opt/iscsi_target_config_done
+  register: iscsi_target_config_done
+
+# targetcli /backstores/block create name=block0 dev=/dev/vdb
+- name: Create block /dev/vdb
+  ansible.builtin.command: targetcli /backstores/block create name=block0 dev=/dev/vdb
+  when: iscsi_target_config_done.stat.exists != True
+  notify: targetcli saveconfig
+
+# targetcli /iscsi create wwn=iqn.2023-10.local.otus:storage.target00
+- name: Create wwn
+  ansible.builtin.command: targetcli /iscsi create wwn=iqn.2023-10.local.otus:storage.target00
+  when: iscsi_target_config_done.stat.exists != True
+  notify: targetcli saveconfig
+
+## targetcli /iscsi/iqn.2023-10.local.otus:storage.target00/tpg1/portals create 0.0.0.0
+#- name: Create portals for local ip
+#  ansible.builtin.command: "targetcli /iscsi/iqn.2023-10.local.otus:storage.target00/tpg1/portals create {{ subnet_cidrs }}"
+#  when: iscsi_target_config_done.stat.exists != True
+#  notify: targetcli saveconfig
+#  #ignore_errors: true
+
+# targetcli /iscsi/iqn.2023-10.local.otus:storage.target00/tpg1/luns create /backstores/block/block0 lun=1
+- name: Create LUN1 for block target block0
+  ansible.builtin.command: targetcli /iscsi/iqn.2023-10.local.otus:storage.target00/tpg1/luns create /backstores/block/block0 lun=1
+  when: iscsi_target_config_done.stat.exists != True
+  notify: targetcli saveconfig
+
+# targetcli /iscsi/iqn.2023-10.local.otus:storage.target00/tpg1 set attribute authentication=0
+- name: Set attribute authentication=0
+  ansible.builtin.command: targetcli /iscsi/iqn.2023-10.local.otus:storage.target00/tpg1 set attribute authentication=0
+  when: iscsi_target_config_done.stat.exists != True
+  notify: targetcli saveconfig
+
+# targetcli /iscsi/iqn.2023-10.local.otus:storage.target00/tpg1 set auth userid=otus
+- name: Set auth userid=otus
+  ansible.builtin.command: targetcli /iscsi/iqn.2023-10.local.otus:storage.target00/tpg1 set auth userid=otus
+  when: iscsi_target_config_done.stat.exists != True
+  notify: targetcli saveconfig
+
+# targetcli /iscsi/iqn.2023-10.local.otus:storage.target00/tpg1 set auth password=otus1234
+- name: Set auth password=otus1234
+  ansible.builtin.command: targetcli /iscsi/iqn.2023-10.local.otus:storage.target00/tpg1 set auth password=otus1234
+  when: iscsi_target_config_done.stat.exists != True
+  notify: targetcli saveconfig
+  
+# targetcli /iscsi/iqn.2023-10.local.otus:storage.target00/tpg1/acls create iqn.2023-10.local.sergsha:pcs
+- name: Create ACL access
+  ansible.builtin.command: "targetcli /iscsi/iqn.2023-10.local.otus:storage.target00/tpg1/acls create {{ item }}"
+  when: iscsi_target_config_done.stat.exists != True
+  with_items: 
+    - iqn.2023-10.local.sergsha:backend-01
+    - iqn.2023-10.local.sergsha:backend-02
+  notify: targetcli saveconfig
+
+# touch /opt/iscsi_target_config_done
+- name: Set replay protection (/opt/iscsi_target_config_done)
+  ansible.builtin.file:
+    path: /opt/iscsi_target_config_done
+    state: touch
+    owner: root
+    group: root
+    mode: '0744'
+  when: iscsi_target_config_done.stat.exists != True

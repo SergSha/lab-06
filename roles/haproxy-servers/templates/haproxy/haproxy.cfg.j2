@@ -1,0 +1,29 @@
+global
+  log /dev/log local0
+  log /dev/log local1 notice
+  chroot /var/lib/haproxy
+  stats timeout 30s
+  user haproxy
+  group haproxy
+  daemon
+defaults
+log global
+mode http
+option httplog
+option dontlognull
+timeout connect 5000
+timeout client 50000
+timeout server 50000
+
+#frontend
+frontend http_front
+bind *:80
+stats uri /haproxy?stats
+default_backend http_back
+
+#round robin balancing backend http
+backend http_back
+balance roundrobin
+mode http
+server backend-01 {{ ip_address['backend-01'] }}:8080 check # ip_address_of_1st_webserver
+server backend-02 {{ ip_address['backend-02'] }}:8080 check # ip_address_of_2nd_webserver

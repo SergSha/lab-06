@@ -1,0 +1,113 @@
+---
+# dnf update
+
+# dnf install https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+
+# echo 'y' | percona-release setup pxc-80
+
+# dnf install Percona-XtraDB-Cluster-client
+
+# dnf install proxysql2
+
+- name: Setup ProxySQL
+  block:
+
+  - name: Create .mycnf file for root user
+    ansible.builtin.copy:
+      dest: "{{ ansible_env.HOME }}/.my.cnf"
+      mode: 0600
+      content: |
+        [client]
+        user=admin
+        password=admin
+
+  # rpm --import https://www.percona.com/downloads/RPM-GPG-KEY-percona
+  - name: install percona key
+    ansible.builtin.rpm_key:
+      key: https://www.percona.com/downloads/RPM-GPG-KEY-percona
+      state: present
+
+  # dnf install https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+  - name: Install percona repo
+    ansible.builtin.package:
+      name: 'https://repo.percona.com/yum/percona-release-latest.noarch.rpm'
+      state: present
+      update_cache: true
+
+  # dnf update 
+  - name: Update cache
+    ansible.builtin.dnf: 
+      update_cache: yes
+
+  # percona-release setup pxc-80
+  - name: percona-release setup pxc-80
+    ansible.builtin.shell: echo 'y' | percona-release setup pxc-80
+
+  # ddnf install Percona-XtraDB-Cluster-client -y
+  - name: Install packages
+    ansible.builtin.package:
+      name: 
+        - Percona-XtraDB-Cluster-client
+        - proxysql2
+        #- python3-PyMySQL
+      state: latest
+
+  # systemctl restart percona
+  - name: Restart proxysql service
+    ansible.builtin.service:
+      name: proxysql
+      state: restarted
+
+  # INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'10.10.10.x1',3306);
+  # INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'10.10.10.x2',3306);
+  # INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'10.10.10.x3',3306);
+  - name: Insert into mysql_servers (hostgroup_id, hostname, port)
+    ansible.builtin.shell: >
+      mysql -h 127.0.0.1 -P 6032 -e "{{ item }}"
+    with_items:
+      - "INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'{{ ip_address['db-01'] }}',3306);"
+      - "INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'{{ ip_address['db-02'] }}',3306);"
+      - "INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'{{ ip_address['db-03'] }}',3306);"
+
+  # UPDATE global_variables SET variable_value='proxysql' WHERE variable_name='mysql-monitor_username';
+  # UPDATE global_variables SET variable_value='proxysql@Otus1234' WHERE variable_name='mysql-monitor_password';
+  - name: UPDATE global_variables mysql-monitor_username and mysql-monitor_password
+    ansible.builtin.shell: >
+      mysql -h 127.0.0.1 -P 6032 -e "{{ item }}"
+    with_items:
+      - "UPDATE global_variables SET variable_value='{{ proxysql_user }}' WHERE variable_name='mysql-monitor_username';"
+      - "UPDATE global_variables SET variable_value='{{ proxysql_password }}' WHERE variable_name='mysql-monitor_password';"
+
+  # LOAD MYSQL VARIABLES TO RUNTIME;
+  # SAVE MYSQL VARIABLES TO DISK;
+  - name: Load and save proxysql config for variables
+    ansible.builtin.shell: >
+      mysql -h 127.0.0.1 -P 6032 -e "{{ item }}"
+    with_items:
+      - "LOAD MYSQL VARIABLES TO RUNTIME;"
+      - "SAVE MYSQL VARIABLES TO DISK;"
+
+  # LOAD MYSQL SERVERS TO RUNTIME;
+  - name: Enable monitoring of these nodes, load them at runtime
+    ansible.builtin.shell: >
+      mysql -h 127.0.0.1 -P 6032 -e "{{ item }}"
+    with_items:
+      - "LOAD MYSQL SERVERS TO RUNTIME;"
+
+  # INSERT INTO mysql_users (username,password) VALUES ('sbuser','sbpass');
+  - name: Add user phpadmin to proxysql 
+    ansible.builtin.shell: >
+      mysql -h 127.0.0.1 -P 6032 -e "{{ item }}"
+    with_items:
+      - "INSERT INTO mysql_users (username,password) VALUES ('{{ mysql_php_user }}','{{ mysql_php_password }}');"
+
+  # LOAD MYSQL USERS TO RUNTIME;
+  # SAVE MYSQL USERS TO DISK;
+  - name: Load and save proxysql config for users
+    ansible.builtin.shell: >
+      mysql -h 127.0.0.1 -P 6032 -e "{{ item }}"
+    with_items:
+      - "LOAD MYSQL USERS TO RUNTIME;"
+      - "SAVE MYSQL USERS TO DISK;"
+
+  when: "'proxysql_servers' in group_names"

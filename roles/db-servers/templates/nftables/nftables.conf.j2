@@ -1,0 +1,35 @@
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+table ip filter {
+
+        chain MYSQL_INP {
+                ip saddr {{ subnet_cidrs }} tcp dport {{ mysql_port }} ct state new counter accept
+                ip saddr {{ subnet_cidrs }} tcp dport 33060 ct state new counter accept
+        }
+        chain PXC_INP {
+                ip saddr {{ subnet_cidrs }} tcp dport { 4444,4567,4568 } ct state new counter accept
+                ip saddr {{ subnet_cidrs }} tcp dport 4567 ct state new counter accept
+        }
+        chain INPUT {
+                type filter hook input priority filter; policy drop;
+                ct state invalid counter drop
+                iifname "lo" counter accept
+                tcp dport 22 ct state new counter accept
+                udp dport 323 counter accept
+                ip saddr {{ subnet_cidrs }} icmp type echo-request counter accept
+                ct state established,related counter accept
+                counter jump MYSQL_INP
+                counter jump PXC_INP
+        }
+
+        chain FORWARD {
+                type filter hook forward priority filter; policy drop;
+        }
+
+        chain OUTPUT {
+                type filter hook output priority filter; policy drop;
+                ct state established,related,new counter accept
+        }
+}
