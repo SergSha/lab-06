@@ -1,0 +1,120 @@
+#- name: Create share mysql data folder
+#  file:
+#    path: /data
+#    state: directory
+#    mode: 0777
+
+#- name: Copy config files
+#  ansible.builtin.template:
+#    src: percona/cars.sql
+#    dest: /data/cars.sql
+
+#- name: Debian OS
+#  block:
+
+#  when: ansible_os_family == "Debian"
+
+- name: RedHat OS
+  block:
+
+  # yum -y install epel-release
+  - name: Install EPEL release
+    ansible.builtin.dnf:
+      name: epel-release
+      state: present
+
+  - name: install postgresql key
+    ansible.builtin.rpm_key:
+      key: https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-16
+      state: present
+
+  # Install the repository RPM:
+  # sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+  - name: Install the repository RPM
+    ansible.builtin.dnf:
+      name: 'https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm'
+      state: present
+  
+  # dnf -qy module disable postgresql
+  - name: Disable the built-in PostgreSQL module
+    ansible.builtin.command: dnf -qy module disable postgresql
+
+  # yum -y install postgresql16 postgresql16-devel
+  - name: Install postgresql16 postgresql16-devel
+    ansible.builtin.dnf:
+      name:
+        - postgresql16
+        #- postgresql16-devel
+      state: latest
+
+  ## ln -s /usr/pgsql-12/bin/* /usr/sbin/
+  #- name: Create a symbolic link /usr/pgsql-12/bin/* to /usr/sbin/
+  #  ansible.builtin.file:
+  #    src: /usr/pgsql-12/bin/*
+  #    dest: /usr/sbin/
+  #    state: link
+
+  # yum -y install python3 python3-devel python3-pip gcc libpq-devel
+  - name: Install python3 python3-devel python3-pip gcc libpq-devel
+    ansible.builtin.dnf:
+      name:
+        - python3 
+        - python3-devel 
+        - python3-pip 
+        - gcc 
+        - libpq-devel
+      state: present
+
+  # pip3 install --upgrade testresources
+  # pip3 install --upgrade setuptools
+  - name: Install testresources, setuptools --upgrade
+    ansible.builtin.pip:
+      name:
+        - testresources
+        - setuptools
+      extra_args: --upgrade
+
+  # pip3 install psycopg2
+  - name: Install psycopg2
+    ansible.builtin.pip:
+      name:
+        - psycopg2
+
+  # yum -y install python3-etcd
+  - name: Install python3-etcd
+    ansible.builtin.dnf:
+      name:
+        - python3-etcd
+      state: present
+
+  # yum -y install patroni patroni-etcd watchdog
+  - name: Install patroni patroni-etcd watchdog
+    ansible.builtin.dnf:
+      name:
+        - patroni 
+        - patroni-etcd 
+        - watchdog
+      state: latest
+
+  # mkdir -p /etc/patroni
+  - name: Create a directory /etc/patroni, if it does not exist
+    ansible.builtin.file:
+      path: /etc/patroni
+      state: directory
+
+  # cp -p /usr/share/doc/patroni/postgres0.yml /etc/patroni/patroni.yml
+  - name: Copy /usr/share/doc/patroni/postgres0.yml to /etc/patroni/patroni.yml
+    ansible.builtin.copy:
+      src: /usr/share/doc/patroni/postgres0.yml
+      dest: /etc/patroni/patroni.yml
+      remote_src: true
+
+  ## systemctl start patroni
+  #- name: Create a directory /etc/patroni, if it does not exist
+  #  ansible.builtin.service:
+  #    name: patroni
+  #    state: restarted
+  #    enabled: true
+
+  when: ansible_os_family == "RedHat"
+

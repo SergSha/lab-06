@@ -27,12 +27,12 @@ locals {
 
   #subnet_cidrs  = ["10.10.50.0/24"]
   #subnet_name   = "my_vpc_subnet"
-  nginx_count    = "2"
-  backend_count  = "2"
-  iscsi_count    = "1"
+  nginx_count    = "0"
+  backend_count  = "0"
+  iscsi_count    = "0"
   db_count       = "3"
-  proxysql_count = "1"
-  jump_count = "1"
+  proxysql_count = "0"
+  jump_count     = "1"
   /*
   disk = {
     "web" = {
@@ -41,13 +41,13 @@ locals {
   }
   */
 }
-
+/*
 resource "yandex_resourcemanager_folder" "folders" {
   for_each = local.folders
   name     = each.key
   cloud_id = local.cloud_id
 }
-
+*/
 #data "yandex_resourcemanager_folder" "folders" {
 #  for_each   = yandex_resourcemanager_folder.folders
 #  name       = each.value["name"]
@@ -349,7 +349,7 @@ resource "yandex_compute_disk" "disks" {
 #  #folder_id  = yandex_resourcemanager_folder.folders["loadbalancer-folder"].id
 #  depends_on = [yandex_compute_disk.disks]
 #}
-
+/*
 resource "yandex_lb_target_group" "keepalived_group" {
   name      = "keepalived-group"
   region_id = "ru-central1"
@@ -394,6 +394,7 @@ data "yandex_lb_network_load_balancer" "keepalived" {
   #folder_id = yandex_resourcemanager_folder.folders["loadbalancer-folder"].id
   depends_on = [yandex_lb_network_load_balancer.keepalived]
 }
+*/
 /*
 resource "null_resource" "nginx-servers" {
 
