@@ -47,12 +47,26 @@
         #- postgresql16-devel
       state: latest
 
-  ## ln -s /usr/pgsql-12/bin/* /usr/sbin/
-  #- name: Create a symbolic link /usr/pgsql-12/bin/* to /usr/sbin/
-  #  ansible.builtin.file:
-  #    src: /usr/pgsql-12/bin/*
-  #    dest: /usr/sbin/
-  #    state: link
+  # find /usr/pgsql-16/bin/ -type f -printf "%f\n"
+  - name: Search for all files in the directory /usr/pgsql-16/bin/
+    ansible.builtin.find:
+      paths: /usr/pgsql-16/bin/
+      #file_type: file
+      #patterns: '*'
+    register: pgsql_bin_files
+
+  #- ansible.builtin.debug: 
+  #    msg: "{{ pgsql_bin_files['files'] | map(attribute='path') | map('regex_replace','^.*/(.*)$','\\1') | list }}"
+
+  # ln -s /usr/pgsql-16/bin/* /usr/sbin/
+  - name: Create a symbolic link /usr/pgsql-16/bin/* to /usr/sbin/
+    ansible.builtin.file:
+      src: "/usr/pgsql-16/bin/{{ item }}"
+      dest: "/usr/sbin/{{ item }}"
+      mode: 0755
+      state: link
+    loop: "{{ pgsql_bin_files['files'] | map(attribute='path') | map('regex_replace','^.*/(.*)$','\\1') | list }}"
+    # {{ item.split('/') | last }}
 
   # yum -y install python3 python3-devel python3-pip gcc libpq-devel
   - name: Install python3 python3-devel python3-pip gcc libpq-devel
@@ -61,8 +75,8 @@
         - python3 
         - python3-devel 
         - python3-pip 
-        - gcc 
-        - libpq-devel
+        - gcc
+        #- libpq-devel
       state: present
 
   # pip3 install --upgrade testresources
@@ -73,19 +87,22 @@
         - testresources
         - setuptools
       extra_args: --upgrade
+      executable: pip3
 
-  # pip3 install psycopg2
-  - name: Install psycopg2
-    ansible.builtin.pip:
-      name:
-        - psycopg2
-
-  # yum -y install python3-etcd
-  - name: Install python3-etcd
+  # dnf install python3-psycopg2 python3-etcd
+  - name: Install psycopg2 python3-etcd
     ansible.builtin.dnf:
       name:
+        - python3-psycopg2
         - python3-etcd
-      state: present
+      state: latest
+
+  ## yum -y install python3-etcd
+  #- name: Install python3-etcd
+  #  ansible.builtin.dnf:
+  #    name:
+  #      - python3-etcd
+  #    state: present
 
   # yum -y install patroni patroni-etcd watchdog
   - name: Install patroni patroni-etcd watchdog
@@ -108,6 +125,17 @@
       src: /usr/share/doc/patroni/postgres0.yml
       dest: /etc/patroni/patroni.yml
       remote_src: true
+
+  # echo 'system_id_source = "uname"' >> /etc/lvm/lvm.conf
+  - name: Add 'use_lvmlockd = 1' to LVM Confifuration File
+    ansible.builtin.lineinfile:
+      path: /etc/patroni/patroni.yml
+      regexp: "{{ item.regexp }}"
+      line: "{{ item.line }}"
+    with_items: 
+      - { regexp: "system_id_source =", line: "system_id_source = 'uname'" }
+      - { regexp: "use_lvmlockd =", line: "use_lvmlockd = 1" }
+      - { regexp: "use_devicesfile =", line: "use_devicesfile = 1" }
 
   ## systemctl start patroni
   #- name: Create a directory /etc/patroni, if it does not exist

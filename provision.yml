@@ -7,9 +7,9 @@
   roles:
     - chrony
     #- { role: haproxy-servers, when: "'haproxy_servers' in group_names" }
-    - { role: jump-servers, when: "'jump_servers' in group_names" }
-    - { role: nginx-servers, when: "'nginx_servers' in group_names" }
-    - { role: iscsi-servers, when: "'iscsi_servers' in group_names" }
-    - { role: backend-servers, when: "'backend_servers' in group_names" }
-    - { role: db-servers, when: "'db_servers' in group_names" }
-    - { role: proxysql-servers, when: "'proxysql_servers' in group_names" }
+    - { role: jump-servers, when: "'jump_servers' in group_names", tags: jump-servers_tag }
+    - { role: nginx-servers, when: "'nginx_servers' in group_names", tags: nginx-servers_tag }
+    - { role: iscsi-servers, when: "'iscsi_servers' in group_names", tags: iscsi-servers_tag }
+    - { role: backend-servers, when: "'backend_servers' in group_names", tags: backend-servers_tag }
+    - { role: db-servers, when: "'db_servers' in group_names", tags: db-servers_tag }
+    - { role: proxysql-servers, when: "'proxysql_servers' in group_names", tags: proxysql-servers_tag }
