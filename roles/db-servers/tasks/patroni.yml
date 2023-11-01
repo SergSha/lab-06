@@ -29,7 +29,7 @@
       state: present
 
   # Install the repository RPM:
-  # sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+  # dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
   - name: Install the repository RPM
     ansible.builtin.dnf:
       name: 'https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm'
@@ -39,11 +39,12 @@
   - name: Disable the built-in PostgreSQL module
     ansible.builtin.command: dnf -qy module disable postgresql
 
-  # yum -y install postgresql16 postgresql16-devel
-  - name: Install postgresql16 postgresql16-devel
+  # dnf -y install postgresql16 postgresql16-devel
+  - name: Install postgresql16 postgresql16-server postgresql16-devel
     ansible.builtin.dnf:
       name:
         - postgresql16
+        - postgresql16-server
         #- postgresql16-devel
       state: latest
 
@@ -68,8 +69,10 @@
     loop: "{{ pgsql_bin_files['files'] | map(attribute='path') | map('regex_replace','^.*/(.*)$','\\1') | list }}"
     # {{ item.split('/') | last }}
 
-  # yum -y install python3 python3-devel python3-pip gcc libpq-devel
-  - name: Install python3 python3-devel python3-pip gcc libpq-devel
+  # dnf -y install perl ###### not needed yet!
+
+  # dnf -y install python3 python3-devel python3-pip gcc # libpq-devel
+  - name: Install python3 python3-devel python3-pip gcc # libpq-devel
     ansible.builtin.dnf:
       name:
         - python3 
@@ -79,8 +82,7 @@
         #- libpq-devel
       state: present
 
-  # pip3 install --upgrade testresources
-  # pip3 install --upgrade setuptools
+  # pip3 install testresources setuptools --upgrade
   - name: Install testresources, setuptools --upgrade
     ansible.builtin.pip:
       name:
@@ -89,7 +91,7 @@
       extra_args: --upgrade
       executable: pip3
 
-  # dnf install python3-psycopg2 python3-etcd
+  # dnf -y install python3-psycopg2 python3-etcd
   - name: Install psycopg2 python3-etcd
     ansible.builtin.dnf:
       name:
@@ -97,14 +99,7 @@
         - python3-etcd
       state: latest
 
-  ## yum -y install python3-etcd
-  #- name: Install python3-etcd
-  #  ansible.builtin.dnf:
-  #    name:
-  #      - python3-etcd
-  #    state: present
-
-  # yum -y install patroni patroni-etcd watchdog
+  # dnf -y install patroni patroni-etcd watchdog
   - name: Install patroni patroni-etcd watchdog
     ansible.builtin.dnf:
       name:
@@ -126,23 +121,34 @@
       dest: /etc/patroni/patroni.yml
       remote_src: true
 
-  # echo 'system_id_source = "uname"' >> /etc/lvm/lvm.conf
-  - name: Add 'use_lvmlockd = 1' to LVM Confifuration File
+  # echo 'ip addresses' > /etc/patroni/patroni.yml
+  - name: Edit /etc/patroni/patroni.yml
     ansible.builtin.lineinfile:
       path: /etc/patroni/patroni.yml
+      #insertafter: 'restapi:'
       regexp: "{{ item.regexp }}"
       line: "{{ item.line }}"
     with_items: 
-      - { regexp: "system_id_source =", line: "system_id_source = 'uname'" }
-      - { regexp: "use_lvmlockd =", line: "use_lvmlockd = 1" }
-      - { regexp: "use_devicesfile =", line: "use_devicesfile = 1" }
+      - { regexp: "^  listen: 127.0.0.1:8008", line: "  listen: {{ ansible_host }}:8008" }
+      - { regexp: "^  connect_address: 127.0.0.1:8008", line: "  connect_address: 10.10.10.31:8008" }
+      - { regexp: "^  host: 127.0.0.1:2379", line: "  host: {{ ip_address['db-01'] }}:2379,{{ ip_address['db-02'] }}:2379,{{ ip_address['db-03'] }}:2379" }
 
-  ## systemctl start patroni
-  #- name: Create a directory /etc/patroni, if it does not exist
-  #  ansible.builtin.service:
-  #    name: patroni
-  #    state: restarted
-  #    enabled: true
+  - name: Add content block to /etc/patroni/patroni.yml
+    ansible.builtin.lineinfile:
+      path: /etc/patroni/patroni.yml
+      insertafter: '      - host replication replicator 127.0.0.1/32 md5'
+      line: "      - host replication replicator {{ item }}/0 md5"
+    with_items:
+      - "{{ ip_address['db-01'] }}"
+      - "{{ ip_address['db-02'] }}"
+      - "{{ ip_address['db-03'] }}"
+
+  # systemctl start patroni
+  - name: Start patroni
+    ansible.builtin.service:
+      name: patroni
+      state: restarted
+      enabled: true
 
   when: ansible_os_family == "RedHat"
 
