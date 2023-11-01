@@ -108,6 +108,22 @@
         - watchdog
       state: latest
 
+  # dnf -y install 'dnf-command(config-manager)'
+  - name: Install 'dnf-command(config-manager)'
+    ansible.builtin.dnf:
+      name:
+        - 'dnf-command(config-manager)'
+      state: latest
+
+  # dnf config-manager --enable pgdg-rhel8-extras && \
+  # dnf -y install etcd
+  - name: Install etcd
+    ansible.builtin.dnf:
+      name:
+        - etcd
+      state: latest
+      enablerepo: pgdg-rhel8-extras
+
   # mkdir -p /etc/patroni
   - name: Create a directory /etc/patroni, if it does not exist
     ansible.builtin.file:
@@ -121,6 +137,21 @@
       dest: /etc/patroni/patroni.yml
       remote_src: true
 
+  # name: postgresql0
+  # echo 'ip addresses' > /etc/patroni/patroni.yml
+  - name: Edit /etc/patroni/patroni.yml
+    ansible.builtin.lineinfile:
+      path: /etc/patroni/patroni.yml
+      #insertafter: 'restapi:'
+      regexp: "^name: postgresql0"
+      line: "name: {{ item.member }}"
+    when: "ansible_hostname in '{{ item.hostname }}'"
+    with_items: 
+      - { member: "etcd1", hostname: "db-01" }
+      - { member: "etcd2", hostname: "db-02" }
+      - { member: "etcd3", hostname: "db-03" }
+
+
   # echo 'ip addresses' > /etc/patroni/patroni.yml
   - name: Edit /etc/patroni/patroni.yml
     ansible.builtin.lineinfile:
@@ -129,9 +160,15 @@
       regexp: "{{ item.regexp }}"
       line: "{{ item.line }}"
     with_items: 
+      # scope: batman
+      - { regexp: "^scope: batman", line: "scope: PgsqlCluster" }
       - { regexp: "^  listen: 127.0.0.1:8008", line: "  listen: {{ ansible_host }}:8008" }
-      - { regexp: "^  connect_address: 127.0.0.1:8008", line: "  connect_address: 10.10.10.31:8008" }
+      - { regexp: "^  connect_address: 127.0.0.1:8008", line: "  connect_address: {{ ansible_host }}:8008" }
       - { regexp: "^  host: 127.0.0.1:2379", line: "  host: {{ ip_address['db-01'] }}:2379,{{ ip_address['db-02'] }}:2379,{{ ip_address['db-03'] }}:2379" }
+      - { regexp: "^  listen: 127.0.0.1:5432", line: "  listen: {{ ansible_host }}:5432" }
+      - { regexp: "^  connect_address: 127.0.0.1:5432", line: "  connect_address: {{ ansible_host }}:5432" }
+      - { regexp: "^  data_dir: data/postgresql0", line: "  data_dir: /var/lib/pgsql/16/data" }
+      - { regexp: "^#  bin_dir:", line: "  bin_dir: /usr/pgsql-16/bin/" }
 
   - name: Add content block to /etc/patroni/patroni.yml
     ansible.builtin.lineinfile:

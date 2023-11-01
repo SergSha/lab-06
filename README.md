@@ -69,3 +69,15 @@ sleep 60 && ansible-playbook ./provision.yml
 
 <img src="pics/screen-001.png" alt="screen-001.png" />
 
+
+
+less /etc/patroni/patroni.yml 
+
+patroni --validate-config /etc/patroni/patroni.yml
+
+systemctl status patroni
+
+patronictl -c /etc/patroni/patroni.yml list
+
+patronictl -c /etc/patroni/patroni.yml switchover
+
