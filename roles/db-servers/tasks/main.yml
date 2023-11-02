@@ -2,5 +2,8 @@
 #- name: Include nftables service
 #  include_tasks: nftables.yml
 
+- name: Include etcd cluster setup
+  include_tasks: etcd.yml
+
 - name: Include postresql cluster setup
   include_tasks: patroni.yml

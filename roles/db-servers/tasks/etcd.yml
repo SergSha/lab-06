@@ -1,0 +1,77 @@
+---
+
+- name: RedHat OS
+  block:
+
+  - name: install postgresql key
+    ansible.builtin.rpm_key:
+      key: https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-16
+      state: present
+
+  # Install the repository RPM:
+  # dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+  - name: Install the repository RPM
+    ansible.builtin.dnf:
+      name: 'https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm'
+      state: present
+
+  # dnf -y install 'dnf-command(config-manager)'
+  - name: Install 'dnf-command(config-manager)'
+    ansible.builtin.dnf:
+      name:
+        - 'dnf-command(config-manager)'
+      state: latest
+
+  # dnf config-manager --enable pgdg-rhel8-extras && \
+  # dnf -y install etcd
+  - name: Install etcd
+    ansible.builtin.dnf:
+      name:
+        - etcd
+      state: latest
+      enablerepo: pgdg-rhel8-extras
+
+  when: ansible_os_family == "RedHat"
+
+# cp -p /usr/share/doc/patroni/postgres0.yml /etc/patroni/patroni.yml
+- name: Backup config file /etc/etcd/etcd.conf to /etc/etcd/etcd.conf.old
+  ansible.builtin.copy:
+    src: /etc/etcd/etcd.conf
+    dest: /etc/etcd/etcd.conf.old
+    remote_src: true
+
+- name: Edit /etc/etcd/etcd.conf name member
+  ansible.builtin.lineinfile:
+    path: /etc/etcd/etcd.conf
+    regexp: "^ETCD_NAME=default"
+    line: "ETCD_NAME=\"{{ item.member }}\""
+  when: "ansible_hostname in '{{ item.hostname }}'"
+  with_items: 
+    - { member: "etcd1", hostname: "db-01" }
+    - { member: "etcd2", hostname: "db-02" }
+    - { member: "etcd3", hostname: "db-03" }
+
+- name: Edit /etc/etcd/etcd.conf
+  ansible.builtin.lineinfile:
+    path: /etc/etcd/etcd.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items: 
+    - { regexp: "^ETCD_DATA_DIR=", line: "ETCD_DATA_DIR=\"/var/lib/etcd\"" }
+    - { regexp: "^#ETCD_HEARTBEAT_INTERVAL=", line: "ETCD_HEARTBEAT_INTERVAL=\"100\"" }
+    - { regexp: "^#ETCD_ELECTION_TIMEOUT=", line: "ETCD_ELECTION_TIMEOUT=\"5000\"" }
+    - { regexp: "^#ETCD_LISTEN_PEER_URLS=", line: "ETCD_LISTEN_PEER_URLS=\"http://0.0.0.0:2380\"" }
+    - { regexp: "^ETCD_LISTEN_CLIENT_URLS=", line: "ETCD_LISTEN_CLIENT_URLS=\"http://0.0.0.0:2379\"" }
+    - { regexp: "^#ETCD_INITIAL_ADVERTISE_PEER_URLS=", line: "ETCD_INITIAL_ADVERTISE_PEER_URLS=\"http://{{ ansible_host }}:2380\"" }
+    - { regexp: "^#ETCD_INITIAL_CLUSTER=", line: "ETCD_INITIAL_CLUSTER=\"etcd1=http://{{ ip_address['db-01'] }}:2380,etcd2=http://{{ ip_address['db-02'] }}:2380,etcd3=http://{{ ip_address['db-03'] }}:2380\"" }
+    - { regexp: "^#ETCD_INITIAL_CLUSTER_STATE=", line: "ETCD_INITIAL_CLUSTER_STATE=\"new\"" }
+    - { regexp: "^#ETCD_INITIAL_CLUSTER_TOKEN=", line: "ETCD_INITIAL_CLUSTER_TOKEN=\"PgsqlCluster\"" }
+    - { regexp: "^ETCD_ADVERTISE_CLIENT_URLS=", line: "ETCD_ADVERTISE_CLIENT_URLS=\"http://{{ ansible_host }}:2379\"" }
+
+# systemctl start etcd
+- name: Start etcd
+  ansible.builtin.service:
+    name: etcd
+    state: restarted
+    enabled: true
+      
