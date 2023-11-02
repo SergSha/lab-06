@@ -124,6 +124,42 @@
       state: latest
       enablerepo: pgdg-rhel8-extras
 
+  - name: Edit /etc/etcd/etcd.conf name member
+    ansible.builtin.lineinfile:
+      path: /etc/etcd/etcd.conf
+      regexp: "^ETCD_NAME=default"
+      line: "ETCD_NAME=\"{{ item.member }}\""
+    when: "ansible_hostname in '{{ item.hostname }}'"
+    with_items: 
+      - { member: "etcd1", hostname: "db-01" }
+      - { member: "etcd2", hostname: "db-02" }
+      - { member: "etcd3", hostname: "db-03" }
+
+  - name: Edit /etc/etcd/etcd.conf
+    ansible.builtin.lineinfile:
+      path: /etc/etcd/etcd.conf
+      #insertafter: 'restapi:'
+      regexp: "{{ item.regexp }}"
+      line: "{{ item.line }}"
+    with_items: 
+      - { regexp: "^ETCD_DATA_DIR=", line: "ETCD_DATA_DIR=\"/var/lib/etcd\"" }
+      - { regexp: "^#ETCD_HEARTBEAT_INTERVAL=", line: "ETCD_HEARTBEAT_INTERVAL=\"100\"" }
+      - { regexp: "^#ETCD_ELECTION_TIMEOUT=", line: "ETCD_ELECTION_TIMEOUT=\"5000\"" }
+      - { regexp: "^#ETCD_LISTEN_PEER_URLS=", line: "ETCD_LISTEN_PEER_URLS=\"http://0.0.0.0:2380\"" }
+      - { regexp: "^ETCD_LISTEN_CLIENT_URLS=", line: "ETCD_LISTEN_CLIENT_URLS=\"http://0.0.0.0:2379\"" }
+      - { regexp: "^#ETCD_INITIAL_ADVERTISE_PEER_URLS=", line: "ETCD_INITIAL_ADVERTISE_PEER_URLS=\"http://{{ ansible_host }}:2380\"" }
+      - { regexp: "^#ETCD_INITIAL_CLUSTER=", line: "ETCD_INITIAL_CLUSTER=\"etcd1=http://{{ ip_address['db-01'] }}:2380,etcd2=http://{{ ip_address['db-02'] }}:2380,etcd3=http://{{ ip_address['db-03'] }}:2380\"" }
+      - { regexp: "^#ETCD_INITIAL_CLUSTER_STATE=", line: "ETCD_INITIAL_CLUSTER_STATE=\"new\"" }
+      - { regexp: "^#ETCD_INITIAL_CLUSTER_TOKEN=", line: "ETCD_INITIAL_CLUSTER_TOKEN=\"PgsqlCluster\"" }
+      - { regexp: "^ETCD_ADVERTISE_CLIENT_URLS=", line: "ETCD_ADVERTISE_CLIENT_URLS=\"http://{{ ansible_host }}:2379\"" }
+
+  # systemctl start etcd
+  - name: Start etcd
+    ansible.builtin.service:
+      name: etcd
+      state: restarted
+      enabled: true
+      
   # mkdir -p /etc/patroni
   - name: Create a directory /etc/patroni, if it does not exist
     ansible.builtin.file:
@@ -160,11 +196,10 @@
       regexp: "{{ item.regexp }}"
       line: "{{ item.line }}"
     with_items: 
-      # scope: batman
       - { regexp: "^scope: batman", line: "scope: PgsqlCluster" }
       - { regexp: "^  listen: 127.0.0.1:8008", line: "  listen: {{ ansible_host }}:8008" }
       - { regexp: "^  connect_address: 127.0.0.1:8008", line: "  connect_address: {{ ansible_host }}:8008" }
-      - { regexp: "^  host: 127.0.0.1:2379", line: "  host: {{ ip_address['db-01'] }}:2379,{{ ip_address['db-02'] }}:2379,{{ ip_address['db-03'] }}:2379" }
+      - { regexp: "^  host: 127.0.0.1:2379", line: "  hosts: {{ ip_address['db-01'] }}:2379,{{ ip_address['db-02'] }}:2379,{{ ip_address['db-03'] }}:2379" }
       - { regexp: "^  listen: 127.0.0.1:5432", line: "  listen: {{ ansible_host }}:5432" }
       - { regexp: "^  connect_address: 127.0.0.1:5432", line: "  connect_address: {{ ansible_host }}:5432" }
       - { regexp: "^  data_dir: data/postgresql0", line: "  data_dir: /var/lib/pgsql/16/data" }
