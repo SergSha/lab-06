@@ -28,8 +28,8 @@ locals {
   #subnet_cidrs  = ["10.10.50.0/24"]
   #subnet_name   = "my_vpc_subnet"
   nginx_count    = "0"
-  backend_count  = "0"
-  iscsi_count    = "0"
+  backend_count  = "2"
+  iscsi_count    = "1"
   db_count       = "3"
   proxysql_count = "0"
   jump_count     = "1"
@@ -149,7 +149,7 @@ module "backend-servers" {
     for subnet in yandex_vpc_subnet.subnets :
     subnet.name => {
       subnet_id = subnet.id
-      #nat       = true
+      nat       = true
     }
     if subnet.name == "loadbalancer-subnet" #|| subnet.name == "backend-subnet"
   }
