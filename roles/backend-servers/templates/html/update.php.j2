@@ -1,8 +1,9 @@
 <?php 
 try {
-    $connect_data = "host={{ ip_address['db-01'] }} port=5432 dbname=cars user=postgres password=zalando";
-    $db_connect = pg_connect($connect_data);
-    //$conn = new PDO("mysql:host={{ ip_address['db-01'] }};port=6033;dbname={{ db_name }}", "{{ mysql_php_user }}", "{{ mysql_php_password }}");
+    $user = "{{ php_user }}";
+    $pass = "{{ php_password }}";
+    $connect_data = "pgsql:host={{ ip_address['db-01'] }};port={{ sql_port }};dbname={{ db_name }}";
+    $db_connect = new PDO($connect_data, $user, $pass);
 }
 catch (PDOException $e) {
     die("Database error: " . $e->getMessage());

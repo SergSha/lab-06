@@ -1,10 +1,10 @@
 ---
 # Define php site user for percona server
-mysql_php_user: phpadmin
-mysql_php_password: phpadmin@Otus1234
+php_user: phpadmin
+php_password: phpadmin@Otus1234
 
 # Some defaults variables for percona server config file
-mysql_port: 3306
+sql_port: 5432
 
 # Define is a database must be created
 create_app_db: true

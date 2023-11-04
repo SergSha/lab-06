@@ -10,7 +10,7 @@
     ansible.builtin.apt:
       name:
         - "php{{ php_version }}-fpm"
-        - "php{{ php_version }}-mysql"
+        - "php{{ php_version }}-pgsql"
         - "php{{ php_version }}-bcmath"
         - "php{{ php_version }}-ctype"
         - "php{{ php_version }}-json"
@@ -57,7 +57,7 @@
     ansible.builtin.dnf:
       name:
         - "php-fpm"
-        - "php-mysqlnd"
+        - "php-pgsql"
         - "php-bcmath"
         - "php-ctype"
         - "php-json"
