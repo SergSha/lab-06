@@ -14,9 +14,6 @@ ip_address:
 %{ for db-server in db-servers ~}
   ${ db-server["name"] }: ${ db-server.network_interface[0].ip_address }
 %{ endfor ~}
-%{ for proxysql-server in proxysql-servers ~}
-  ${ proxysql-server["name"] }: ${ proxysql-server.network_interface[0].ip_address }
-%{ endfor ~}
 %{ for jump-server in jump-servers ~}
   ${ jump-server["name"] }: ${ jump-server.network_interface[0].ip_address }
 %{ endfor ~}

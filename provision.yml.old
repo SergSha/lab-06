@@ -1,0 +1,44 @@
+---
+- hosts: all
+  #remote_user: cloud-user
+  become: true
+  serial: 5
+
+  tasks:
+  - name: Set hostname
+    ansible.builtin.hostname:
+      name: "{{ ansible_hostname }}.{{ domain }}"
+
+  - name: Add my own IP address to /etc/hosts instead localhost
+    ansible.builtin.replace:
+      path: "/etc/hosts"
+      regexp: '^127\.0\.0\.1(\s+){{ ansible_hostname }}(\s+){{ ansible_hostname }}.*'
+      replace: "{{ ansible_host }} {{ ansible_hostname }}.{{ domain }} {{ ansible_hostname }}"
+
+  - name: Add nodes to /etc/hosts
+    ansible.builtin.lineinfile:
+      path: "/etc/hosts"
+      state: present
+      line: "{{ item }}"
+    loop:
+      - "{{ ip_address['nginx-01'] }} nginx-01.{{ domain }} nginx-01"
+      - "{{ ip_address['nginx-02'] }} nginx-02.{{ domain }} nginx-02"
+      - "{{ ip_address['backend-01'] }} backend-01.{{ domain }} backend-01"
+      - "{{ ip_address['backend-02'] }} backend-02.{{ domain }} backend-02"
+      - "{{ ip_address['backend-03'] }} backend-03.{{ domain }} backend-03"
+      - "{{ ip_address['iscsi-01'] }} iscsi-01.{{ domain }} iscsi-01"
+      - "{{ ip_address['db-01'] }} db-01.{{ domain }} db-01"
+      - "{{ ip_address['db-02'] }} db-02.{{ domain }} db-02"
+      - "{{ ip_address['db-03'] }} db-03.{{ domain }} db-03"
+      - "{{ ip_address['jump-01'] }} jump-01.{{ domain }} jump-01"
+
+
+  roles:
+    - chrony
+    #- { role: haproxy-servers, when: "'haproxy_servers' in group_names" }
+    - { role: jump-servers, when: "'jump_servers' in group_names", tags: jump-servers_tag }
+    - { role: nginx-servers, when: "'nginx_servers' in group_names", tags: nginx-servers_tag }
+    - { role: iscsi-servers, when: "'iscsi_servers' in group_names", tags: iscsi-servers_tag }
+    - { role: backend-servers, when: "'backend_servers' in group_names", tags: backend-servers_tag }
+    - { role: db-servers, when: "'db_servers' in group_names", tags: db-servers_tag }
+    #- { role: proxysql-servers, when: "'proxysql_servers' in group_names", tags: proxysql-servers_tag }

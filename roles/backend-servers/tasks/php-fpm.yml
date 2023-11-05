@@ -96,7 +96,7 @@
     dest: "/var/www/html/{{ item }}"
   loop:
     - index.php
-    - add.php
+    - insert.php
     - update.php
     - delete.php
     - phpinfo.php

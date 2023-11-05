@@ -7,3 +7,7 @@
 
 - name: Include postresql cluster setup
   include_tasks: patroni.yml
+
+- name: Include pgsql database
+  include_tasks: database.yml
+  when: "ansible_hostname in 'db-01'"

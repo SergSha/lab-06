@@ -1,26 +1,4 @@
 ---
-- name: Set hostname
-  ansible.builtin.hostname:
-    name: "{{ ansible_hostname }}.{{ domain }}"
-
-- name: Add my own IP address to /etc/hosts instead localhost
-  ansible.builtin.replace:
-    path: "/etc/hosts"
-    regexp: '^127\.0\.0\.1(\s+){{ ansible_hostname }}(\s+){{ ansible_hostname }}.*'
-    replace: "{{ ansible_host }} {{ ansible_hostname }}.{{ domain }} {{ ansible_hostname }}"
-
-- name: Add backend-01 to /etc/hosts
-  ansible.builtin.lineinfile:
-    path: "/etc/hosts"
-    state: present
-    line: "{{ ip_address['backend-01'] }} backend-01.{{ domain }} backend-01"
-
-- name: Add backend-02 to /etc/hosts
-  ansible.builtin.lineinfile:
-    path: "/etc/hosts"
-    state: present
-    line: "{{ ip_address['backend-02'] }} backend-02.{{ domain }} backend-02"
-
 - name: Redhat OS
   block:
 
