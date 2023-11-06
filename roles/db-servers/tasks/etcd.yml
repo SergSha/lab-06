@@ -48,7 +48,7 @@
   when: "ansible_hostname in 'db-01'"
   with_items: 
     - { regexp: "^ETCD_NAME=", line: "ETCD_NAME=etcd1" }
-    - { regexp: "^ETCD_DATA_DIR=", line: "ETCD_DATA_DIR=\"/var/lib/etcd/etcd1\"" }
+    #- { regexp: "^ETCD_DATA_DIR=", line: "ETCD_DATA_DIR=\"/var/lib/etcd/etcd1\"" }
 
 - name: Edit /etc/etcd/etcd.conf for etcd2
   ansible.builtin.lineinfile:
@@ -58,7 +58,7 @@
   when: "ansible_hostname in 'db-02'"
   with_items: 
     - { regexp: "^ETCD_NAME=", line: "ETCD_NAME=etcd2" }
-    - { regexp: "^ETCD_DATA_DIR=", line: "ETCD_DATA_DIR=\"/var/lib/etcd/etcd2\"" }
+    #- { regexp: "^ETCD_DATA_DIR=", line: "ETCD_DATA_DIR=\"/var/lib/etcd/etcd2\"" }
 
 - name: Edit /etc/etcd/etcd.conf for etcd3
   ansible.builtin.lineinfile:
@@ -68,7 +68,7 @@
   when: "ansible_hostname in 'db-03'"
   with_items: 
     - { regexp: "^ETCD_NAME=", line: "ETCD_NAME=etcd3" }
-    - { regexp: "^ETCD_DATA_DIR=", line: "ETCD_DATA_DIR=\"/var/lib/etcd/etcd3\"" }
+    #- { regexp: "^ETCD_DATA_DIR=", line: "ETCD_DATA_DIR=\"/var/lib/etcd/etcd3\"" }
 
 - name: Edit /etc/etcd/etcd.conf
   ansible.builtin.lineinfile:
@@ -76,7 +76,7 @@
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
   with_items: 
-    #- { regexp: "^ETCD_DATA_DIR=", line: "ETCD_DATA_DIR=\"/var/lib/etcd\"" }
+    - { regexp: "^ETCD_DATA_DIR=", line: "ETCD_DATA_DIR=\"/var/lib/etcd\"" }
     - { regexp: "^#ETCD_HEARTBEAT_INTERVAL=", line: "ETCD_HEARTBEAT_INTERVAL=\"100\"" }
     - { regexp: "^#ETCD_ELECTION_TIMEOUT=", line: "ETCD_ELECTION_TIMEOUT=\"5000\"" }
     - { regexp: "^#ETCD_LISTEN_PEER_URLS=", line: "ETCD_LISTEN_PEER_URLS=\"http://{{ ansible_host }}:2380\"" }

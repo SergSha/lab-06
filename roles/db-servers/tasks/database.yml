@@ -7,13 +7,21 @@
 - name: Create a new database with name "cars" and specific encoding and locale # settings
   community.postgresql.postgresql_db:
     name: cars
-    encoding: UTF-8
-    lc_collate: ru_RU.UTF-8
-    lc_ctype: ru_RU.UTF-8
+    encoding: UTF8
+    lc_collate: ru_RU.UTF8
+    lc_ctype: ru_RU.UTF8
     template: template0
+    login_host: 10.10.10.254
+    port: 5433
+    login_user: "postgres"
+    login_password: "zalando"
 
 - name: Restore database using the tar format
   community.postgresql.postgresql_db:
     name: cars
     state: restore
-    target: /tmp/cars.tar
+    target: /tmp/cars.sql
+    login_host: 10.10.10.254
+    port: 5433
+    login_user: "postgres"
+    login_password: "zalando"

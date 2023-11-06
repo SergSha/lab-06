@@ -35,6 +35,9 @@
 - name: Include php-fpm service
   include_tasks: php-fpm.yml
 
+- name: Include haproxy service
+  include_tasks: haproxy.yml
+
 - name: Include selinux setting
   include_tasks: selinux.yml
   when: ansible_os_family == "RedHat"

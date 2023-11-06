@@ -2,7 +2,7 @@
 try {
     $user = "{{ php_user }}";
     $pass = "{{ php_password }}";
-    $connect_data = "pgsql:host={{ ip_address['db-01'] }};port={{ sql_port }};dbname={{ db_name }}";
+    $connect_data = "pgsql:host={{ sql_virtual_ip }};port={{ sql_port }};dbname={{ db_name }}";
     $db_connect = new PDO($connect_data, $user, $pass);
 }
 catch (PDOException $e) {

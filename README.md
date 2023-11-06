@@ -81,3 +81,24 @@ patronictl -c /etc/patroni/patroni.yml list
 
 patronictl -c /etc/patroni/patroni.yml switchover
 
+
+
+
+etcdctl endpoint status --write-out=table --endpoints=10.10.10.13:2379,10.10.10.18:2379,10.10.10.10:2379
+
+On backend-servers:
+
+dnf install haproxy -y
+
+vi /etc/haproxy/haproxy.cfg 
+
+
+On backend-01:
+
+pcs resource create VirtualIP IPaddr2 ip=10.10.10.254 cidr_netmask=24
+
+pcs resource create HAProxy systemd:haproxy op monitor interval=10s on-fail=ignore clone interleave=true ordered=true
+
+pcs constraint colocation add VirtualIP with HAProxy score=INFINITY
+
+

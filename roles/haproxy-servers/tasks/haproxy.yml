@@ -1,12 +1,12 @@
 ---
-# copy haproxy/haproxy.cfg.j2 /etc/haproxy/haproxy.cfg
+# cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.backup
 - name: Backup default haproxy config file
   ansible.builtin.copy:
     src: /etc/haproxy/haproxy.cfg
     dest: /etc/haproxy/haproxy.cfg.backup
     remote_src: true
 
-# copy haproxy/haproxy.conf.j2 /etc/haproxy/haproxy.conf
+# copy haproxy/haproxy.cfg.j2 /etc/haproxy/haproxy.cfg
 - name: Template custom haproxy config file
   ansible.builtin.template:
     src: haproxy/haproxy.cfg.j2

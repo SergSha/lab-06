@@ -1,10 +1,11 @@
 ---
 # Define php site user for percona server
-php_user: phpadmin
-php_password: phpadmin@Otus1234
+php_user: postgres                  # phpadmin
+php_password: zalando               # phpadmin@Otus1234
 
 # Some defaults variables for percona server config file
-sql_port: 5432
+sql_virtual_ip: 10.10.10.254
+sql_port: 5433
 
 # Define is a database must be created
 create_app_db: true
@@ -14,9 +15,3 @@ db_user: myuser
 db_user_password: anotherreallylongP@ssw0rd
 db_host: "%"
 db_dump_file: "cars.sql"
-
-# Define proxysql user for proxysql server
-proxysql_user: proxysql
-proxysql_password: proxysql@Otus1234
-sbuser: sbuser
-sbuser_password: sbuser@Otus1234
