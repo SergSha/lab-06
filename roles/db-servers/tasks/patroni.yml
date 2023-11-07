@@ -17,18 +17,18 @@
 - name: RedHat OS
   block:
 
-  # yum -y install epel-release
+  # dnf -y install epel-release
   - name: Install EPEL release
     ansible.builtin.dnf:
       name: epel-release
       state: present
 
+  # rpm --import https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-16
   - name: install postgresql key
     ansible.builtin.rpm_key:
       key: https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-16
       state: present
 
-  # Install the repository RPM:
   # dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
   - name: Install the repository RPM
     ansible.builtin.dnf:
@@ -68,8 +68,6 @@
       state: link
     loop: "{{ pgsql_bin_files['files'] | map(attribute='path') | map('regex_replace','^.*/(.*)$','\\1') | list }}"
     # {{ item.split('/') | last }}
-
-  # dnf -y install perl ###### not needed yet!
 
   # dnf -y install python3 python3-devel python3-pip gcc # libpq-devel
   - name: Install python3 python3-devel python3-pip gcc # libpq-devel

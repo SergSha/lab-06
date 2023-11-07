@@ -2,20 +2,20 @@
 # group vars
 
 ip_address:
-%{ for nginx-server in nginx-servers ~}
-  ${ nginx-server["name"] }: ${ nginx-server.network_interface[0].ip_address }
-%{ endfor ~}
-%{ for backend-server in backend-servers ~}
-  ${ backend-server["name"] }: ${ backend-server.network_interface[0].ip_address }
-%{ endfor ~}
-%{ for iscsi-server in iscsi-servers ~}
-  ${ iscsi-server["name"] }: ${ iscsi-server.network_interface[0].ip_address }
+%{ for jump-server in jump-servers ~}
+  ${ jump-server["name"] }: ${ jump-server.network_interface[0].ip_address }
 %{ endfor ~}
 %{ for db-server in db-servers ~}
   ${ db-server["name"] }: ${ db-server.network_interface[0].ip_address }
 %{ endfor ~}
-%{ for jump-server in jump-servers ~}
-  ${ jump-server["name"] }: ${ jump-server.network_interface[0].ip_address }
+%{ for iscsi-server in iscsi-servers ~}
+  ${ iscsi-server["name"] }: ${ iscsi-server.network_interface[0].ip_address }
+%{ endfor ~}
+%{ for backend-server in backend-servers ~}
+  ${ backend-server["name"] }: ${ backend-server.network_interface[0].ip_address }
+%{ endfor ~}
+%{ for nginx-server in nginx-servers ~}
+  ${ nginx-server["name"] }: ${ nginx-server.network_interface[0].ip_address }
 %{ endfor ~}
 
 

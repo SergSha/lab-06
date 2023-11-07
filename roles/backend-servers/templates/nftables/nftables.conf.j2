@@ -28,6 +28,12 @@ table ip filter {
         chain PHP_FPM_INP {
                 ip saddr {{ subnet_cidrs }} tcp dport 9000 ct state new counter accept
         }
+        chain PGSQL_INP {
+                ip saddr {{ subnet_cidrs }} tcp dport {{ sql_port }} ct state new counter accept
+        }
+        chain HAPROXY_INP {
+                tcp dport 7000 ct state new counter accept
+        }
         chain INPUT {
                 type filter hook input priority filter; policy drop;
                 ct state invalid counter drop
@@ -44,6 +50,8 @@ table ip filter {
                 counter jump MULTI_SITE_CLUSTER_INP
                 counter jump NGINX_INP
                 #counter jump PHP_FPM_INP
+                counter jump PGSQL_INP
+                counter jump HAPROXY_INP
         }
 
         chain FORWARD {

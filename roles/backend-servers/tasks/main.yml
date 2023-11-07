@@ -1,6 +1,13 @@
 ---
-#- name: Include nftables service
-#  include_tasks: nftables.yml
+- name: Include nftables service
+  include_tasks: nftables.yml
+
+- name: Include selinux setting
+  include_tasks: selinux.yml
+  when: ansible_os_family == "RedHat"
+
+- name: Include sysctl configure
+  include_tasks: sysctl.yml
 
 - name: Include setup pcs service
   include_tasks: install_pkgs.yml
@@ -38,6 +45,9 @@
 - name: Include haproxy service
   include_tasks: haproxy.yml
 
-- name: Include selinux setting
-  include_tasks: selinux.yml
-  when: ansible_os_family == "RedHat"
+- name: Include postgresql package
+  include_tasks: postgresql.yml
+
+- name: Include pgsql database
+  include_tasks: database.yml
+  when: "ansible_hostname in 'backend-01'"

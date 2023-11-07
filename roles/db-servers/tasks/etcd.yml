@@ -79,8 +79,8 @@
     - { regexp: "^ETCD_DATA_DIR=", line: "ETCD_DATA_DIR=\"/var/lib/etcd\"" }
     - { regexp: "^#ETCD_HEARTBEAT_INTERVAL=", line: "ETCD_HEARTBEAT_INTERVAL=\"100\"" }
     - { regexp: "^#ETCD_ELECTION_TIMEOUT=", line: "ETCD_ELECTION_TIMEOUT=\"5000\"" }
-    - { regexp: "^#ETCD_LISTEN_PEER_URLS=", line: "ETCD_LISTEN_PEER_URLS=\"http://{{ ansible_host }}:2380\"" }
-    - { regexp: "^ETCD_LISTEN_CLIENT_URLS=", line: "ETCD_LISTEN_CLIENT_URLS=\"http://{{ ansible_host }}:2379\"" }
+    - { regexp: "^#ETCD_LISTEN_PEER_URLS=", line: "ETCD_LISTEN_PEER_URLS=\"http://0.0.0.0:2380\"" }
+    - { regexp: "^ETCD_LISTEN_CLIENT_URLS=", line: "ETCD_LISTEN_CLIENT_URLS=\"http://0.0.0.0:2379\"" }
     - { regexp: "^#ETCD_INITIAL_ADVERTISE_PEER_URLS=", line: "ETCD_INITIAL_ADVERTISE_PEER_URLS=\"http://{{ ansible_host }}:2380\"" }
     - { regexp: "^#ETCD_INITIAL_CLUSTER=", line: "ETCD_INITIAL_CLUSTER=\"etcd1=http://{{ ip_address['db-01'] }}:2380,etcd2=http://{{ ip_address['db-02'] }}:2380,etcd3=http://{{ ip_address['db-03'] }}:2380\"" }
     - { regexp: "^#ETCD_INITIAL_CLUSTER_STATE=", line: "ETCD_INITIAL_CLUSTER_STATE=\"new\"" }

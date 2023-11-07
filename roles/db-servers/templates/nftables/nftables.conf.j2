@@ -4,13 +4,15 @@ flush ruleset
 
 table ip filter {
 
-        chain MYSQL_INP {
-                ip saddr {{ subnet_cidrs }} tcp dport {{ mysql_port }} ct state new counter accept
-                ip saddr {{ subnet_cidrs }} tcp dport 33060 ct state new counter accept
+        chain PGSQL_INP {
+                ip saddr {{ subnet_cidrs }} tcp dport {{ pgsql_port }} ct state new counter accept
+                ip saddr {{ subnet_cidrs }} tcp dport { 5000,5001 } ct state new counter accept
         }
-        chain PXC_INP {
-                ip saddr {{ subnet_cidrs }} tcp dport { 4444,4567,4568 } ct state new counter accept
-                ip saddr {{ subnet_cidrs }} tcp dport 4567 ct state new counter accept
+        chain PATRONI_INP {
+                ip saddr {{ subnet_cidrs }} tcp dport 8008 ct state new counter accept
+        }
+        chain ETCD_INP {
+                ip saddr {{ subnet_cidrs }} tcp dport { 2379,2380 } ct state new counter accept
         }
         chain INPUT {
                 type filter hook input priority filter; policy drop;
@@ -20,8 +22,9 @@ table ip filter {
                 udp dport 323 counter accept
                 ip saddr {{ subnet_cidrs }} icmp type echo-request counter accept
                 ct state established,related counter accept
-                counter jump MYSQL_INP
-                counter jump PXC_INP
+                counter jump PGSQL_INP
+                counter jump PATRONI_INP
+                counter jump ETCD_INP
         }
 
         chain FORWARD {

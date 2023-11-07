@@ -1,0 +1,30 @@
+---
+# rpm --import https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-16
+  - name: install postgresql key
+    ansible.builtin.rpm_key:
+      key: https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-16
+      state: present
+
+  # dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+  - name: Install the repository RPM
+    ansible.builtin.dnf:
+      name: 'https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm'
+      state: present
+  
+  # dnf -qy module disable postgresql
+  - name: Disable the built-in PostgreSQL module
+    ansible.builtin.command: dnf -qy module disable postgresql
+
+  # dnf -y install postgresql16
+  - name: Install postgresql16 package
+    ansible.builtin.dnf:
+      name:
+        - postgresql16
+      state: latest
+
+  # dnf -y install python3-psycopg2
+  - name: Install psycopg2
+    ansible.builtin.dnf:
+      name:
+        - python3-psycopg2
+      state: latest

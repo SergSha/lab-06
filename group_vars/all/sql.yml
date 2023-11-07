@@ -6,6 +6,7 @@ php_password: zalando               # phpadmin@Otus1234
 # Some defaults variables for percona server config file
 sql_virtual_ip: 10.10.10.254
 sql_port: 5433
+pgsql_port: 5432
 
 # Define is a database must be created
 create_app_db: true

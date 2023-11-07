@@ -1,34 +1,24 @@
 
 [all]
-%{ for nginx-server in nginx-servers ~}
-${ nginx-server["name"] } ansible_host=${ nginx-server.network_interface[0].ip_address }
-%{ endfor ~}
-%{ for backend-server in backend-servers ~}
-${ backend-server["name"] } ansible_host=${ backend-server.network_interface[0].ip_address }
-%{ endfor ~}
-%{ for iscsi-server in iscsi-servers ~}
-${ iscsi-server["name"] } ansible_host=${ iscsi-server.network_interface[0].ip_address }
+%{ for jump-server in jump-servers ~}
+${ jump-server["name"] } ansible_host=${ jump-server.network_interface[0].ip_address }
 %{ endfor ~}
 %{ for db-server in db-servers ~}
 ${ db-server["name"] } ansible_host=${ db-server.network_interface[0].ip_address }
 %{ endfor ~}
-%{ for jump-server in jump-servers ~}
-${ jump-server["name"] } ansible_host=${ jump-server.network_interface[0].ip_address }
-%{ endfor ~}
-
-[nginx_servers]
-%{ for nginx-server in nginx-servers ~}
-${ nginx-server["name"] }
-%{ endfor ~}
-
-[backend_servers]
-%{ for backend-server in backend-servers ~}
-${ backend-server["name"] }
-%{ endfor ~}
-
-[iscsi_servers]
 %{ for iscsi-server in iscsi-servers ~}
-${ iscsi-server["name"] }
+${ iscsi-server["name"] } ansible_host=${ iscsi-server.network_interface[0].ip_address }
+%{ endfor ~}
+%{ for backend-server in backend-servers ~}
+${ backend-server["name"] } ansible_host=${ backend-server.network_interface[0].ip_address }
+%{ endfor ~}
+%{ for nginx-server in nginx-servers ~}
+${ nginx-server["name"] } ansible_host=${ nginx-server.network_interface[0].ip_address }
+%{ endfor ~}
+
+[jump_servers]
+%{ for jump-server in jump-servers ~}
+${ jump-server["name"] }
 %{ endfor ~}
 
 [db_servers]
@@ -36,9 +26,19 @@ ${ iscsi-server["name"] }
 ${ db-server["name"] }
 %{ endfor ~}
 
-[jump_servers]
-%{ for jump-server in jump-servers ~}
-${ jump-server["name"] }
+[iscsi_servers]
+%{ for iscsi-server in iscsi-servers ~}
+${ iscsi-server["name"] }
+%{ endfor ~}
+
+[backend_servers]
+%{ for backend-server in backend-servers ~}
+${ backend-server["name"] }
+%{ endfor ~}
+
+[nginx_servers]
+%{ for nginx-server in nginx-servers ~}
+${ nginx-server["name"] }
 %{ endfor ~}
 
 [all:vars]

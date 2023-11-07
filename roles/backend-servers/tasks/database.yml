@@ -8,20 +8,20 @@
   community.postgresql.postgresql_db:
     name: cars
     encoding: UTF8
-    lc_collate: ru_RU.UTF8
-    lc_ctype: ru_RU.UTF8
+    lc_collate: en_US.UTF8
+    lc_ctype: en_US.UTF8
     template: template0
-    login_host: 10.10.10.254
-    port: 5433
+    login_host: "{{ sql_virtual_ip }}"
+    port: "{{ sql_port }}"
     login_user: "postgres"
     login_password: "zalando"
 
-- name: Restore database using the tar format
+- name: Restore database using the sql or tar format
   community.postgresql.postgresql_db:
     name: cars
     state: restore
     target: /tmp/cars.sql
-    login_host: 10.10.10.254
-    port: 5433
+    login_host: "{{ sql_virtual_ip }}"
+    port: "{{ sql_port }}"
     login_user: "postgres"
     login_password: "zalando"

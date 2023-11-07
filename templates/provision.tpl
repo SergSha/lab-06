@@ -20,20 +20,20 @@
         state: present
         line: "{{ item }}"
       loop:
-%{ for nginx-server in nginx-servers ~}
-        - "${ nginx-server.network_interface[0].ip_address } ${ nginx-server["name"] }.{{ domain }} ${ nginx-server["name"] }"
-%{ endfor ~}
-%{ for backend-server in backend-servers ~}
-        - "${ backend-server.network_interface[0].ip_address } ${ backend-server["name"] }.{{ domain }} ${ backend-server["name"] }"
-%{ endfor ~}
-%{ for iscsi-server in iscsi-servers ~}
-        - "${ iscsi-server.network_interface[0].ip_address } ${ iscsi-server["name"] }.{{ domain }} ${ iscsi-server["name"] }"
+%{ for jump-server in jump-servers ~}
+        - "${ jump-server.network_interface[0].ip_address } ${ jump-server["name"] }.{{ domain }} ${ jump-server["name"] }"
 %{ endfor ~}
 %{ for db-server in db-servers ~}
         - "${ db-server.network_interface[0].ip_address } ${ db-server["name"] }.{{ domain }} ${ db-server["name"] }"
 %{ endfor ~}
-%{ for jump-server in jump-servers ~}
-        - "${ jump-server.network_interface[0].ip_address } ${ jump-server["name"] }.{{ domain }} ${ jump-server["name"] }"
+%{ for iscsi-server in iscsi-servers ~}
+        - "${ iscsi-server.network_interface[0].ip_address } ${ iscsi-server["name"] }.{{ domain }} ${ iscsi-server["name"] }"
+%{ endfor ~}
+%{ for backend-server in backend-servers ~}
+        - "${ backend-server.network_interface[0].ip_address } ${ backend-server["name"] }.{{ domain }} ${ backend-server["name"] }"
+%{ endfor ~}
+%{ for nginx-server in nginx-servers ~}
+        - "${ nginx-server.network_interface[0].ip_address } ${ nginx-server["name"] }.{{ domain }} ${ nginx-server["name"] }"
 %{ endfor ~}
 
 - hosts: all
@@ -42,9 +42,9 @@
   serial: 5
   roles:
     - { role: chrony, tags: chrony_tag }
-    #- { role: haproxy-servers, when: "'haproxy_servers' in group_names" }
     - { role: jump-servers, when: "'jump_servers' in group_names", tags: jump-servers_tag }
-    - { role: nginx-servers, when: "'nginx_servers' in group_names", tags: nginx-servers_tag }
+    - { role: db-servers, when: "'db_servers' in group_names", tags: db-servers_tag }
     - { role: iscsi-servers, when: "'iscsi_servers' in group_names", tags: iscsi-servers_tag }
     - { role: backend-servers, when: "'backend_servers' in group_names", tags: backend-servers_tag }
-    - { role: db-servers, when: "'db_servers' in group_names", tags: db-servers_tag }
+    #- { role: haproxy-servers, when: "'haproxy_servers' in group_names" tags: haproxy-servers_tag }
+    - { role: nginx-servers, when: "'nginx_servers' in group_names", tags: nginx-servers_tag }

@@ -1,7 +1,23 @@
 ---
-# systemctl restart percona
-- name: restart percona
+
+# systemctl restart nftables --now
+- name: Restart NFTables
   ansible.builtin.service:
-    name: mysqld
+    name: nftables
     state: restarted
     enabled: yes
+
+# systemctl start etcd
+- name: Start etcd
+  ansible.builtin.service:
+    name: etcd
+    state: restarted
+    enabled: true
+
+# systemctl start patroni
+- name: Start patroni
+  ansible.builtin.service:
+    name: patroni
+    state: restarted
+    enabled: true
+    

@@ -1,17 +1,10 @@
 ---
-# systemctl restart chrony
-- name: Restart Chrony Debian
+# systemctl restart nftables --now
+- name: Restart NFTables
   ansible.builtin.service:
-    name: chrony
+    name: nftables
     state: restarted
-    daemon_reload: yes
-
-# systemctl restart chronyd
-- name: Restart Chronyd RedHat
-  ansible.builtin.service:
-    name: chronyd
-    state: restarted
-    daemon_reload: yes
+    enabled: yes
 
 # systemctl enable php-fpm --now
 - name: Start php-fpm service Debian

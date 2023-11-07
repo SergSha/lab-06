@@ -1,13 +1,9 @@
 ---
-#- name: Include nftables service
-#  include_tasks: nftables.yml
+- name: Include nftables service
+  include_tasks: nftables.yml
 
 - name: Include etcd cluster setup
   include_tasks: etcd.yml
 
 - name: Include postresql cluster setup
   include_tasks: patroni.yml
-
-- name: Include pgsql database
-  include_tasks: database.yml
-  when: "ansible_hostname in 'db-01'"
